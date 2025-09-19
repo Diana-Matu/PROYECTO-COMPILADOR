@@ -26,7 +26,14 @@ public class DFA {
      * @param allStates  A list of all states in the DFA.
      */
     public DFA(DfaState startState, List<DfaState> allStates) {
-        //TODO: Implement DFA construction logic.
-        throw new UnsupportedOperationException("DFA construction is not supported yet.");
+        this.startState = startState;
+        this.allStates = allStates;
+
+        // Determinar cuáles estados son finales
+        for (DfaState state : allStates) {
+            state.setFinal(
+                state.nfaStates.stream().anyMatch(s -> s.isFinal) // si algún NFA es final → DFA también lo es
+            );
+        }
     }
 }

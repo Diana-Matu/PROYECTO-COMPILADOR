@@ -1,9 +1,11 @@
 package com.compiler.lexer;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import com.compiler.lexer.nfa.NFA;
 import com.compiler.lexer.nfa.State;
+import com.compiler.lexer.nfa.Transition;
 
 /**
  * NfaSimulator
@@ -42,20 +44,27 @@ public class NfaSimulator {
      * @return True if the input is accepted by the NFA, false otherwise.
      */
     public boolean simulate(NFA nfa, String input) {
-        // TODO: Implement simulate
-        /*
-         Pseudocode:
-         1. Initialize currentStates with epsilon-closure of NFA start state
-         2. For each character in input:
-              - For each state in currentStates:
-                  - For each transition:
-                      - If transition symbol matches character:
-                          - Add epsilon-closure of destination state to nextStates
-              - Set currentStates to nextStates
-         3. After input, if any state in currentStates is final, return true
-         4. Otherwise, return false
-        */
-        throw new UnsupportedOperationException("Not implemented");
+        Set<State> currentStates = new HashSet<>();
+        addEpsilonClosure(nfa.getStartState(), currentStates);
+
+        for (char c : input.toCharArray()) {
+            Set<State> nextStates = new HashSet<>();
+            for (State state : currentStates) {
+                for (Transition t : state.transitions) {
+                    if (t.symbol != null && t.symbol == c) {
+                        addEpsilonClosure(t.toState, nextStates);
+                    }
+                }
+            }
+            currentStates = nextStates;
+        }
+
+        for (State state : currentStates) {
+            if (state.isFinal()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -65,15 +74,13 @@ public class NfaSimulator {
      * @param closureSet The set to accumulate reachable states.
      */
     private void addEpsilonClosure(State start, Set<State> closureSet) {
-        // TODO: Implement addEpsilonClosure
-        /*
-         Pseudocode:
-         If start not in closureSet:
-             - Add start to closureSet
-             - For each transition in start:
-                 - If transition symbol is null:
-                     - Recursively add epsilon-closure of destination state
-        */
-        throw new UnsupportedOperationException("Not implemented");
+        if (closureSet.contains(start)) return;
+        closureSet.add(start);
+
+        for (Transition t : start.transitions) {
+            if (t.symbol == null) {
+                addEpsilonClosure(t.toState, closureSet);
+            }
+        }
     }
 }

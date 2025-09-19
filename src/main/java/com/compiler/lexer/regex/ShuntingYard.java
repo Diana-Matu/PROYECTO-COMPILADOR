@@ -1,9 +1,6 @@
 package com.compiler.lexer.regex;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Stack;
-
+import java.util.*;
 /**
  * Utility class for regular expression parsing using the Shunting Yard
  * algorithm.
@@ -35,24 +32,24 @@ public class ShuntingYard {
      */
     public static String insertConcatenationOperator(String regex) {
         StringBuilder output = new StringBuilder();
+        char[] chars = regex.toCharArray();
 
-        for (int i = 0; i < regex.length(); i++) {
-            char c1 = regex.charAt(i);
+        for (int i = 0; i < chars.length; i++) {
+            char c1 = chars[i];
             output.append(c1);
 
-            if (i + 1 < regex.length()) {
-                char c2 = regex.charAt(i + 1);
-
-                // Rule: insert concatenation if c1 can end an operand/group and c2 can start one
-                if ((isOperand(c1) || c1 == ')' || c1 == '*' || c1 == '+' || c1 == '?') &&
-                    (isOperand(c2) || c2 == '(')) {
+            if (i + 1 < chars.length) {
+                char c2 = chars[i + 1];
+                // insertar '·' si c1 puede concatenarse con c2
+                if ((isOperand(c1) || c1 == ')' || c1 == '*' || c1 == '+' || c1 == '?')
+                        && (isOperand(c2) || c2 == '(')) {
                     output.append('·');
                 }
             }
         }
-
         return output.toString();
     }
+
 
     /**
      * Determines if the given character is an operand (not an operator or
@@ -62,8 +59,8 @@ public class ShuntingYard {
      * @return true if it is an operand, false otherwise.
      */
     private static boolean isOperand(char c) {
-        // TODO: Implement isOperand
-        return !(c == '|' || c == '*' || c == '?' || c == '+' || c == '(' || c == ')' || c == '·');    }
+        return !(c == '|' || c == '*' || c == '?' || c == '+' || c == '(' || c == ')' || c == '·');
+    }
 
     /**
      * Converts an infix regular expression to postfix notation using the
@@ -74,18 +71,18 @@ public class ShuntingYard {
      * @return Regular expression in postfix notation.
      */
     public static String toPostfix(String infixRegex) {
-        // Define operator precedence
+        String regex = insertConcatenationOperator(infixRegex);
+
+        // precedencias: '|' < '·' < '*', '+', '?'
         Map<Character, Integer> precedence = new HashMap<>();
         precedence.put('|', 1);
-        precedence.put('·', 2); // explicit concatenation
+        precedence.put('·', 2);
         precedence.put('*', 3);
         precedence.put('+', 3);
         precedence.put('?', 3);
 
-        String regex = insertConcatenationOperator(infixRegex);
-
         StringBuilder output = new StringBuilder();
-        Stack<Character> stack = new Stack<>();
+        Deque<Character> stack = new ArrayDeque<>();
 
         for (char c : regex.toCharArray()) {
             if (isOperand(c)) {
@@ -97,25 +94,25 @@ public class ShuntingYard {
                     output.append(stack.pop());
                 }
                 if (!stack.isEmpty() && stack.peek() == '(') {
-                    stack.pop(); // discard '('
+                    stack.pop();
                 } else {
-                    throw new IllegalArgumentException("Unbalanced parentheses in regex");
+                    throw new IllegalArgumentException("Unbalanced parentheses in regex: " + regex);
                 }
-            } else { // operator
-                while (!stack.isEmpty() &&
-                       stack.peek() != '(' &&
-                       precedence.get(stack.peek()) >= precedence.get(c)) {
+            } else {
+                // operador: pop mientras la cima tenga mayor o igual precedencia
+                while (!stack.isEmpty() && stack.peek() != '('
+                        && precedence.get(stack.peek()) >= precedence.get(c)) {
                     output.append(stack.pop());
                 }
                 stack.push(c);
             }
         }
 
-        // Pop remaining operators
+        // vaciar pila
         while (!stack.isEmpty()) {
             char op = stack.pop();
             if (op == '(' || op == ')') {
-                throw new IllegalArgumentException("Unbalanced parentheses in regex");
+                throw new IllegalArgumentException("Unbalanced parentheses in regex: " + regex);
             }
             output.append(op);
         }
@@ -123,3 +120,4 @@ public class ShuntingYard {
         return output.toString();
     }
 }
+

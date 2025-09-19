@@ -26,7 +26,6 @@ public class NFA {
     public NFA(State start, State end) {
         this.startState = start;
         this.endState = end;
-        this.endState.isFinal = true; // marcamos el estado final como aceptador
     }
 
     /**
@@ -34,8 +33,7 @@ public class NFA {
      * @return the start state
      */
     public State getStartState() {
-    // TODO: Implement getStartState
-        return startState;
+        return this.startState;
     }
 
      /**
@@ -54,11 +52,10 @@ public class NFA {
      * Concatenation of two NFAs (A·B).
      */
     public static NFA concatenate(NFA a, NFA b) {
-        // The final state of A is no longer final, and it connects to B's start state with epsilon       a.endState.isFinal = false;
+        a.endState.isFinal = false;
         a.endState.transitions.add(new Transition(null, b.startState));
         return new NFA(a.startState, b.endState);
     }
-
     /**
      * Unión of two NFAs (A|B).
      */
@@ -67,7 +64,6 @@ public class NFA {
         State end = new State();
         end.isFinal = true;
 
-        // new epsilon-link
         start.transitions.add(new Transition(null, a.startState));
         start.transitions.add(new Transition(null, b.startState));
 
@@ -88,15 +84,16 @@ public class NFA {
         State end = new State();
         end.isFinal = true;
 
-        start.transitions.add(new Transition(null, a.startState)); // ir a A
-        start.transitions.add(new Transition(null, end));          // o aceptar vacío
+        start.transitions.add(new Transition(null, a.startState));
+        start.transitions.add(new Transition(null, end));
 
         a.endState.isFinal = false;
-        a.endState.transitions.add(new Transition(null, a.startState)); // repetir A
-        a.endState.transitions.add(new Transition(null, end));          // o ir a fin
+        a.endState.transitions.add(new Transition(null, a.startState));
+        a.endState.transitions.add(new Transition(null, end));
 
         return new NFA(start, end);
     }
+
 
     /**
      * Operator + 
@@ -106,19 +103,14 @@ public class NFA {
         State end = new State();
         end.isFinal = true;
 
-        // start → A
         start.transitions.add(new Transition(null, a.startState));
 
-        // A.end → A.start (to repeat)
         a.endState.isFinal = false;
         a.endState.transitions.add(new Transition(null, a.startState));
-
-        // A.end → end
         a.endState.transitions.add(new Transition(null, end));
 
         return new NFA(start, end);
     }
-
     /**
      * Operator ? (zero or occurrence).
      */
@@ -127,8 +119,8 @@ public class NFA {
         State end = new State();
         end.isFinal = true;
 
-        start.transitions.add(new Transition(null, a.startState)); // tomar A
-        start.transitions.add(new Transition(null, end));          // o ir directo a end
+        start.transitions.add(new Transition(null, a.startState));
+        start.transitions.add(new Transition(null, end));
 
         a.endState.isFinal = false;
         a.endState.transitions.add(new Transition(null, end));

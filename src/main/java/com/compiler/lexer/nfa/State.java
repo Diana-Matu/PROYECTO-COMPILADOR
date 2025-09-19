@@ -1,8 +1,6 @@
 package com.compiler.lexer.nfa;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import java.util.*;
 /**
  * Represents a state in a Non-deterministic Finite Automaton (NFA).
  * Each state has a unique identifier, a list of transitions to other states,
@@ -45,7 +43,7 @@ public class State {
     public State() {
         this.id = nextId++;
         this.transitions = new ArrayList<>();
-        this.isFinal = false;    
+        this.isFinal = false;
     }
 
     /**
@@ -53,24 +51,21 @@ public class State {
      * @return true if this state is final, false otherwise
      */
     public boolean isFinal() {
-    // TODO: Implement isFinal
         return isFinal;
-     }  
+    }
 
     /**
      * Returns the states reachable from this state via epsilon transitions (symbol == null).
      * @return a list of states reachable by epsilon transitions
      */
     public List<State> getEpsilonTransitions() {
-    // TODO: Implement getEpsilonTransitions
-    // Pseudocode: Iterate over transitions, if symbol is null, add to result list
-        List<State> epsilonStates = new ArrayList<>();
+        List<State> result = new ArrayList<>();
         for (Transition t : transitions) {
             if (t.symbol == null) {
-                epsilonStates.add(t.toState);
+                result.add(t.toState);
             }
         }
-        return epsilonStates;
+        return result;
     }
 
     /**
@@ -79,14 +74,8 @@ public class State {
      * @return a list of states reachable by the given symbol
      */
     public List<State> getTransitions(char symbol) {
-    // TODO: Implement getTransitions
-    // Pseudocode: Iterate over transitions, if symbol matches, add to result list
-        List<State> symbolStates = new ArrayList<>();
-        for (Transition t : transitions) {
-            if (t.symbol != null && t.symbol == symbol) {
-                symbolStates.add(t.toState);
-            }
-        }
-        return symbolStates;
+        List<State> result = new ArrayList<>();
+        for (Transition t : transitions) if (t.symbol != null && t.symbol == symbol) result.add(t.toState);
+        return result;
     }
 }
