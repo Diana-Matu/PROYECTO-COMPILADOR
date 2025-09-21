@@ -6,39 +6,45 @@ import com.compiler.lexer.dfa.DfaState;
 import java.util.*;
 
 /**
- * Tokenizer
- * ----------
- * This class implements a lexer that recognizes multiple token types based on
- * a set of regular expressions. It applies the "longest match" rule.
+ * Token
+ * -----
+ * Esta clase combina:
+ *  - Representación de un token (tipo, valor).
+ *  - Lógica de tokenización basada en DFAs.
+ *  - Reglas asociadas (TokenDfa).
  */
-public class Tokenizer {
-    /**
-     * Represents a single lexical rule: a DFA and the token type it recognizes.
-     */
-    public static class Token {
-        public final String type;
-        public final String value;
+public class Token {
+    public final String type;
+    public final String value;
 
-        public Token(String type, String value) {
-            this.type = type;
-            this.value = value;
-        }
-
-        @Override
-        public String toString() {
-            return "Token{" + "type='" + type + '\'' + ", value='" + value + '\'' + '}';
-        }
+    public Token(String type, String value) {
+        this.type = type;
+        this.value = value;
     }
 
- 
+    @Override
+    public String toString() {
+        return "Token{" + "type='" + type + '\'' + ", value='" + value + '\'' + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Token)) return false;
+        Token other = (Token) o;
+        return Objects.equals(type, other.type) &&
+               Objects.equals(value, other.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, value);
+    }
+
     /**
-     * Tokenizes the input string using the provided DFAs for each token type.
-     *
-     * @param input   The string to tokenize.
-     * @param tokenDfas A list of DFAs with associated token type names.
-     * @return A list of recognized tokens.
+     * Tokeniza la entrada según las reglas (DFAs asociados).
      */
-    public List<Token> tokenize(String input, List<TokenDfa> tokenDfas) {
+    public static List<Token> tokenize(String input, List<TokenDfa> tokenDfas) {
         List<Token> tokens = new ArrayList<>();
         int pos = 0;
 
@@ -54,11 +60,9 @@ public class Tokenizer {
             Token matchedToken = null;
             int maxMatchLength = 0;
 
-            // Recorremos cada token tipo DFA para aplicar maximal munch
+            // Aplicar maximal munch (longest match)
             for (TokenDfa tokenDfa : tokenDfas) {
-                DFA dfa = tokenDfa.dfa;
-                DfaSimulator simulator = new DfaSimulator();
-                int length = maximalMatchLength(dfa, simulator, input, pos);
+                int length = maximalMatchLength(tokenDfa.dfa, input, pos);
 
                 if (length > maxMatchLength) {
                     maxMatchLength = length;
@@ -66,7 +70,7 @@ public class Tokenizer {
                 }
             }
 
-            if (matchedToken != null) {
+            if (matchedToken != null && maxMatchLength > 0) {
                 tokens.add(matchedToken);
                 pos += maxMatchLength;
             } else {
@@ -78,9 +82,9 @@ public class Tokenizer {
     }
 
     /**
-     * Finds the length of the maximal prefix accepted by the DFA starting at position 'pos'.
+     * Encuentra la longitud del prefijo máximo aceptado por el DFA desde 'pos'.
      */
-    private int maximalMatchLength(DFA dfa, DfaSimulator simulator, String input, int pos) {
+    private static int maximalMatchLength(DFA dfa, String input, int pos) {
         DfaState currentState = dfa.startState;
         int lastAcceptPos = -1;
 
@@ -100,7 +104,7 @@ public class Tokenizer {
     }
 
     /**
-     * Helper class to associate a DFA with a token type.
+     * Clase auxiliar: regla léxica (token type + DFA).
      */
     public static class TokenDfa {
         public final String tokenType;
