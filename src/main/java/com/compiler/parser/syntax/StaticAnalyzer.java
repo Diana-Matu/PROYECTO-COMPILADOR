@@ -1,11 +1,11 @@
 package com.compiler.parser.syntax;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import com.compiler.parser.grammar.Grammar;
+import com.compiler.parser.grammar.Production;
 import com.compiler.parser.grammar.Symbol;
+import com.compiler.parser.grammar.SymbolType;
 
 /**
  * Calculates the FIRST and FOLLOW sets for a given grammar.
@@ -27,25 +27,56 @@ public class StaticAnalyzer {
      * @return A map from Symbol to its FIRST set.
      */
     public Map<Symbol, Set<Symbol>> getFirstSets() {
-        // TODO: Implement the algorithm to calculate FIRST sets.
-        /*
-         * Pseudocode for FIRST set calculation:
-         *
-         * 1. For each symbol S in grammar:
-         *      - If S is a terminal, FIRST(S) = {S}
-         *      - If S is a non-terminal, FIRST(S) = {}
-         *
-         * 2. Repeat until no changes:
-         *      For each production A -> X1 X2 ... Xn:
-         *          - For each symbol Xi in the right-hand side:
-         *              a. Add FIRST(Xi) - {ε} to FIRST(A)
-         *              b. If ε is in FIRST(Xi), continue to next Xi
-         *                 Otherwise, break
-         *          - If ε is in FIRST(Xi) for all i, add ε to FIRST(A)
-         *
-         * 3. Return the map of FIRST sets for all symbols.
-         */
-        throw new UnsupportedOperationException("Not implemented");
+        if (!firstSets.isEmpty()) return firstSets; // cache result
+
+        // 1. Initialize
+        for (Symbol s : grammar.getNonTerminals()) {
+            firstSets.put(s, new HashSet<>());
+        }
+        for (Symbol t : grammar.getTerminals()) {
+            Set<Symbol> set = new HashSet<>();
+            set.add(t);
+            firstSets.put(t, set);
+        }
+
+        // 2. Fixed-point iteration
+        boolean changed;
+        do {
+            changed = false;
+            for (Production p : grammar.getProductions()) {
+                Symbol A = p.getLeft();
+                Set<Symbol> firstA = firstSets.get(A);
+
+                boolean allNullable = true;
+                for (Symbol Xi : p.getRight()) {
+                    Set<Symbol> firstXi = firstSets.get(Xi);
+                    if (firstXi == null) firstXi = new HashSet<>();
+
+                    // add FIRST(Xi) - {ε} to FIRST(A)
+                    int before = firstA.size();
+                    for (Symbol sym : firstXi) {
+                        if (!sym.name.equals("ε")) {
+                            firstA.add(sym);
+                        }
+                    }
+                    if (firstA.size() > before) changed = true;
+
+                    // if ε not in FIRST(Xi), stop
+                    if (!firstXi.contains(new Symbol("ε", SymbolType.TERMINAL))) {
+                        allNullable = false;
+                        break;
+                    }
+                }
+                // if all Xi derive ε, add ε to FIRST(A)
+                if (allNullable) {
+                    if (firstA.add(new Symbol("ε", SymbolType.TERMINAL))) {
+                        changed = true;
+                    }
+                }
+            }
+        } while (changed);
+
+        return firstSets;
     }
 
     /**
@@ -53,26 +84,59 @@ public class StaticAnalyzer {
      * @return A map from Symbol to its FOLLOW set.
      */
     public Map<Symbol, Set<Symbol>> getFollowSets() {
-        // TODO: Implement the algorithm to calculate FOLLOW sets.
-        /*
-         * Pseudocode for FOLLOW set calculation:
-         *
-         * 1. For each non-terminal A, FOLLOW(A) = {}
-         * 2. Add $ (end of input) to FOLLOW(S), where S is the start symbol
-         *
-         * 3. Repeat until no changes:
-         *      For each production B -> X1 X2 ... Xn:
-         *          For each Xi (where Xi is a non-terminal):
-         *              a. For each symbol Xj after Xi (i < j <= n):
-         *                  - Add FIRST(Xj) - {ε} to FOLLOW(Xi)
-         *                  - If ε is in FIRST(Xj), continue to next Xj
-         *                    Otherwise, break
-         *              b. If ε is in FIRST(Xj) for all j > i, add FOLLOW(B) to FOLLOW(Xi)
-         *
-         * 4. Return the map of FOLLOW sets for all non-terminals.
-         *
-         * Note: This method should call getFirstSets() first to obtain FIRST sets.
-         */
-        throw new UnsupportedOperationException("Not implemented");
+        if (!followSets.isEmpty()) return followSets; // cache result
+
+        Map<Symbol, Set<Symbol>> first = getFirstSets();
+
+        // 1. Initialize
+        for (Symbol nt : grammar.getNonTerminals()) {
+            followSets.put(nt, new HashSet<>());
+        }
+        // Add $ to FOLLOW(start symbol)
+        Symbol dollar = new Symbol("$", SymbolType.TERMINAL);
+        followSets.get(grammar.getStartSymbol()).add(dollar);
+
+        // 2. Fixed-point iteration
+        boolean changed;
+        do {
+            changed = false;
+            for (Production p : grammar.getProductions()) {
+                Symbol B = p.getLeft();
+                List<Symbol> rhs = p.getRight();
+
+                for (int i = 0; i < rhs.size(); i++) {
+                    Symbol Xi = rhs.get(i);
+                    if (Xi.type == SymbolType.NON_TERMINAL) {
+                        Set<Symbol> followXi = followSets.get(Xi);
+
+                        boolean allNullable = true;
+                        for (int j = i + 1; j < rhs.size(); j++) {
+                            Symbol Xj = rhs.get(j);
+                            Set<Symbol> firstXj = first.get(Xj);
+
+                            int before = followXi.size();
+                            for (Symbol sym : firstXj) {
+                                if (!sym.name.equals("ε")) {
+                                    followXi.add(sym);
+                                }
+                            }
+                            if (followXi.size() > before) changed = true;
+
+                            if (!firstXj.contains(new Symbol("ε", SymbolType.TERMINAL))) {
+                                allNullable = false;
+                                break;
+                            }
+                        }
+                        if (allNullable) {
+                            int before = followXi.size();
+                            followXi.addAll(followSets.get(B));
+                            if (followXi.size() > before) changed = true;
+                        }
+                    }
+                }
+            }
+        } while (changed);
+
+        return followSets;
     }
 }
