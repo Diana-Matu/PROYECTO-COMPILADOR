@@ -15,12 +15,15 @@ import com.compiler.lexer.nfa.State;
  */
 public class DfaState {
     /**
+     * El nombre del tipo de token reconocido si este estado es final. Puede ser null o una lista si hay conflicto.
+     */
+    public String tokenTypeName;
+    /**
      * Returns all transitions from this state.
      * @return Map of input symbols to destination DFA states.
      */
     public Map<Character, DfaState> getTransitions() {
-        // TODO: Implement getTransitions
-        return transitions; 
+        return transitions;
     }
     private static int nextId = 0;
     /**
@@ -45,12 +48,12 @@ public class DfaState {
      * @param nfaStates The set of NFA states that this DFA state represents.
      */
     public DfaState(Set<State> nfaStates) {
-        this.id = nextId++;
-        this.nfaStates = nfaStates;
-        this.isFinal = false;
-        this.transitions = new HashMap<>();
+    this.id = nextId++;
+    this.nfaStates = nfaStates;
+    this.isFinal = false; // This will be determined after all states are created
+    this.transitions = new HashMap<>();
+    this.tokenTypeName = null;
     }
-
 
     /**
      * Adds a transition from this state to another on a given symbol.
@@ -58,7 +61,7 @@ public class DfaState {
      * @param toState The destination DFA state.
      */
     public void addTransition(Character symbol, DfaState toState) {
-        transitions.put(symbol, toState);
+        this.transitions.put(symbol, toState);
     }
 
     /**
@@ -69,7 +72,7 @@ public class DfaState {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof DfaState)) return false;
+        if (obj == null || getClass() != obj.getClass()) return false;
         DfaState other = (DfaState) obj;
         return nfaStates.equals(other.nfaStates);
     }
@@ -89,14 +92,14 @@ public class DfaState {
      */
     @Override
     public String toString() {
-        return "DfaState{id=" + id + ", isFinal=" + isFinal + ", nfaStates=" + nfaStates + "}";
+        return "D" + id + " " + (isFinal ? "(Final)" : "");
     }
+
     /**
      * Sets the finality of the DFA state.
      * @param isFinal True if this state is a final state, false otherwise.
      */
     public void setFinal(boolean isFinal) {
-    // TODO: Implement setFinal
         this.isFinal = isFinal;
     }
 
@@ -105,7 +108,6 @@ public class DfaState {
      * @return True if this state is a final state, false otherwise.
      */
     public boolean isFinal() {
-    // TODO: Implement isFinal
         return isFinal;
     }
 

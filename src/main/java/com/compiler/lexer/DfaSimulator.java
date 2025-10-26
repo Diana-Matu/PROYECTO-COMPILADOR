@@ -2,6 +2,7 @@ package com.compiler.lexer;
 
 import com.compiler.lexer.dfa.DFA;
 import com.compiler.lexer.dfa.DfaState;
+
 /**
  * DfaSimulator
  * ------------
@@ -25,9 +26,7 @@ public class DfaSimulator {
     /**
      * Default constructor for DfaSimulator.
      */
-        public DfaSimulator() {
-            // TODO: Implement constructor if needed
-        }
+    public DfaSimulator() {}
     /**
      * Simulates the DFA on the given input string.
      * Starts at the DFA's start state and processes each character, following transitions.
@@ -38,21 +37,19 @@ public class DfaSimulator {
      * @return True if the input is accepted by the DFA, false otherwise.
      */
     public boolean simulate(DFA dfa, String input) {
-    // 1. Comenzar desde el estado inicial del DFA
-    DfaState currentState = dfa.startState;
+        DfaState currentState = dfa.startState;
 
-    // 2. Procesar cada carácter del input
-    for (char symbol : input.toCharArray()) {
-        // 2a. Obtener el siguiente estado
-        currentState = currentState.getTransition(symbol);
+        for (char c : input.toCharArray()) {
+            // Get the next state based on the current character
+            currentState = currentState.transitions.get(c);
 
-        // 3. Si no hay transición, rechazar la cadena
-        if (currentState == null) {
-            return false;
+            // If there is no transition for the character, the string is rejected
+            if (currentState == null) {
+                return false;
+            }
         }
-    }
 
-    // 4. Después de procesar toda la cadena, aceptar solo si el estado actual es final
-    return currentState.isFinal();
+        // The string is accepted if the final state is an accepting state
+        return currentState.isFinal;
     }
-}    
+}

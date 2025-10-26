@@ -28,12 +28,5 @@ public class DFA {
     public DFA(DfaState startState, List<DfaState> allStates) {
         this.startState = startState;
         this.allStates = allStates;
-
-        // Determinar cuáles estados son finales
-        for (DfaState state : allStates) {
-            state.setFinal(
-                state.nfaStates.stream().anyMatch(s -> s.isFinal) // si algún NFA es final → DFA también lo es
-            );
-        }
     }
 }

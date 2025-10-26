@@ -1,4 +1,7 @@
+
 package com.compiler.lexer.nfa;
+
+import java.util.List;
 
 /**
  * Represents a Non-deterministic Finite Automaton (NFA) with a start and end state.
@@ -8,6 +11,22 @@ package com.compiler.lexer.nfa;
  */
 
 public class NFA {
+    /**
+     * Combina una lista de NFAs en uno solo, con un estado inicial común y transiciones epsilon.
+     * Los estados finales de cada NFA deben estar marcados con su TokenType.
+     * @param nfas Lista de NFAs a unir
+     * @return NFA combinado
+     */
+    public static NFA union(List<NFA> nfas) {
+        State newStart = new State();
+        for (NFA nfa : nfas) {
+            // Transición epsilon del nuevo estado inicial a cada NFA
+            newStart.transitions.add(new com.compiler.lexer.nfa.Transition(null, nfa.startState));
+        }
+        // No hay un único estado final, pero cada NFA tiene su propio estado final marcado con TokenType
+        // El NFA combinado usa el nuevo estado inicial y no necesita un estado final único
+        return new NFA(newStart, null);
+    }
     /**
      * The initial (start) state of the NFA.
      */
@@ -33,98 +52,6 @@ public class NFA {
      * @return the start state
      */
     public State getStartState() {
-        return this.startState;
-    }
-
-     /**
-     * Creates a basic NFA for a single symbol
-     * @param c transition symbol
-     */
-    public static NFA basic(char c) {
-        State start = new State();
-        State end = new State();
-        end.isFinal = true;
-        start.transitions.add(new Transition(c, end));
-        return new NFA(start, end);
-    }
-
- /**
-     * Concatenation of two NFAs (A·B).
-     */
-    public static NFA concatenate(NFA a, NFA b) {
-        a.endState.isFinal = false;
-        a.endState.transitions.add(new Transition(null, b.startState));
-        return new NFA(a.startState, b.endState);
-    }
-    /**
-     * Unión of two NFAs (A|B).
-     */
-    public static NFA union(NFA a, NFA b) {
-        State start = new State();
-        State end = new State();
-        end.isFinal = true;
-
-        start.transitions.add(new Transition(null, a.startState));
-        start.transitions.add(new Transition(null, b.startState));
-
-        a.endState.isFinal = false;
-        b.endState.isFinal = false;
-
-        a.endState.transitions.add(new Transition(null, end));
-        b.endState.transitions.add(new Transition(null, end));
-
-        return new NFA(start, end);
-    }
-
-    /**
-     * CKleene star clousure (A*).
-     */
-    public static NFA kleeneStar(NFA a) {
-        State start = new State();
-        State end = new State();
-        end.isFinal = true;
-
-        start.transitions.add(new Transition(null, a.startState));
-        start.transitions.add(new Transition(null, end));
-
-        a.endState.isFinal = false;
-        a.endState.transitions.add(new Transition(null, a.startState));
-        a.endState.transitions.add(new Transition(null, end));
-
-        return new NFA(start, end);
-    }
-
-
-    /**
-     * Operator + 
-     */
-    public static NFA plus(NFA a) {
-        State start = new State();
-        State end = new State();
-        end.isFinal = true;
-
-        start.transitions.add(new Transition(null, a.startState));
-
-        a.endState.isFinal = false;
-        a.endState.transitions.add(new Transition(null, a.startState));
-        a.endState.transitions.add(new Transition(null, end));
-
-        return new NFA(start, end);
-    }
-    /**
-     * Operator ? (zero or occurrence).
-     */
-    public static NFA optional(NFA a) {
-        State start = new State();
-        State end = new State();
-        end.isFinal = true;
-
-        start.transitions.add(new Transition(null, a.startState));
-        start.transitions.add(new Transition(null, end));
-
-        a.endState.isFinal = false;
-        a.endState.transitions.add(new Transition(null, end));
-
-        return new NFA(start, end);
+        return startState;
     }
 }

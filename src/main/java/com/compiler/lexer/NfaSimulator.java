@@ -30,9 +30,7 @@ public class NfaSimulator {
     /**
      * Default constructor for NfaSimulator.
      */
-        public NfaSimulator() {
-            // TODO: Implement constructor if needed
-        }
+    public NfaSimulator() {}
 
     /**
      * Simulates the NFA on the given input string.
@@ -44,14 +42,19 @@ public class NfaSimulator {
      * @return True if the input is accepted by the NFA, false otherwise.
      */
     public boolean simulate(NFA nfa, String input) {
+        // The set of states we are currently in
         Set<State> currentStates = new HashSet<>();
-        addEpsilonClosure(nfa.getStartState(), currentStates);
+        // Initialize with the epsilon-closure of the NFA's start state
+        addEpsilonClosure(nfa.startState, currentStates);
 
+        // Process each character of the input string
         for (char c : input.toCharArray()) {
             Set<State> nextStates = new HashSet<>();
+            // For each current state, compute the next states
             for (State state : currentStates) {
                 for (Transition t : state.transitions) {
                     if (t.symbol != null && t.symbol == c) {
+                        // Add the epsilon-closure of the destination state
                         addEpsilonClosure(t.toState, nextStates);
                     }
                 }
@@ -59,12 +62,14 @@ public class NfaSimulator {
             currentStates = nextStates;
         }
 
+        // After processing the entire string, check if any of the current states is a final state of the NFA
         for (State state : currentStates) {
-            if (state.isFinal()) {
-                return true;
+            if (state.isFinal) {
+                return true; // The string is accepted!
             }
         }
-        return false;
+
+        return false; // The string is rejected
     }
 
     /**
@@ -74,11 +79,12 @@ public class NfaSimulator {
      * @param closureSet The set to accumulate reachable states.
      */
     private void addEpsilonClosure(State start, Set<State> closureSet) {
-        if (closureSet.contains(start)) return;
+        if (closureSet.contains(start)) {
+            return;
+        }
         closureSet.add(start);
-
         for (Transition t : start.transitions) {
-            if (t.symbol == null) {
+            if (t.symbol == null) { // Epsilon transition
                 addEpsilonClosure(t.toState, closureSet);
             }
         }

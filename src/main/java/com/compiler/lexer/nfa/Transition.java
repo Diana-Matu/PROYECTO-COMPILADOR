@@ -26,9 +26,6 @@ public class Transition {
      * @param toState The destination state.
      */
     public Transition(Character symbol, State toState) {
-        if (toState == null) {
-            throw new IllegalArgumentException("toState cannot be null");
-        }
         this.symbol = symbol;
         this.toState = toState;
     }
